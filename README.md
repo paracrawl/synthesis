@@ -17,34 +17,34 @@ The following resources are required:
 
 Glossary terms have to be contained in the monolingual corpora at least 10 times -- the more the better for assessing their similarity to words in the parallel corpus.
 
-##INSTALLATION
+## INSTALLATION
 
 You will need fast_align and Moses.
 
-pip3 install gensim cython CuPy
+> pip3 install gensim cython CuPy
 
-git clone https://github.com/clab/fast_align.git
-cd fast_align
-mkdir build
-cd build
-cmake ..
-make
-cd ../..
+> git clone https://github.com/clab/fast_align.git
+> cd fast_align
+> mkdir build
+> cd build
+> cmake ..
+> make
+> cd ../..
 
-##USAGE
+## USAGE
 
 You can use the following toy data:
-wget http://www.statmt.org/paracrawl/synthesis/synthesis-data.tgz
-tar xzf synthesis-data.tgz
+> wget http://www.statmt.org/paracrawl/synthesis/synthesis-data.tgz
+> tar xzf synthesis-data.tgz
 
 Here is the command:
-python ./synthesis.py --dir my-result-dir \
-    --monolingual-corpus `pwd`/synthesis-data/imonolingual.de \
-                         `pwd`/synthesis-data/monolingual.en \
-    --parallel-corpus synthesis-data/parallel.de \
-                      synthesis-data/parallel.en \
-    --glossary synthesis-data/terminology >& log
+> python ./synthesis.py --dir my-result-dir \
+>     --monolingual-corpus `pwd`/synthesis-data/imonolingual.de \
+>                          `pwd`/synthesis-data/monolingual.en \
+>     --parallel-corpus synthesis-data/parallel.de \
+>                       synthesis-data/parallel.en \
+>     --glossary synthesis-data/terminology >& log
 
-##BUGS
+## KNOWN BUGS
 * full path required for mono corpus
 * check early if input files exist
