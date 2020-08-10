@@ -17,7 +17,7 @@ The following resources are required:
 
 Glossary terms have to be contained in the monolingual corpora at least 10 times -- the more the better for assessing their similarity to words in the parallel corpus.
 
-INSTALLATION
+##INSTALLATION
 
 You will need fast_align and Moses.
 
@@ -31,7 +31,7 @@ cmake ..
 make
 cd ../..
 
-USAGE
+##USAGE
 
 You can use the following toy data:
 wget http://www.statmt.org/paracrawl/synthesis/synthesis-data.tgz
@@ -45,6 +45,6 @@ python ./synthesis.py --dir my-result-dir \
                       synthesis-data/parallel.en \
     --glossary synthesis-data/terminology >& log
 
-BUG
+##BUGS
 * full path required for mono corpus
 * check early if input files exist
