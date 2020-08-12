@@ -310,13 +310,26 @@ args = parser.parse_args()
 
 MAX_SIMILAR_WORDS_CONSIDERED = 10240
 MAX_SENTENCE_PAIRS = 200
-#dir = '/home/pkoehn/experiment/nmt-glossary/data/'
 
+# check if files exist
+file_not_found = False
+for file in [ args.alignment, args.glossary, args.monolingual_corpus, args.parallel_corpus, args.embedding ]:
+  if file is None:
+    continue
+  if type(file) is list:
+    for individual_file in file:
+      if not os.path.exists(individual_file):
+        print("ERROR: file does not exist: " + individual_file)
+  else:
+    if not os.path.exists(file):
+      print("ERROR: file does not exist: " + file)
+if file_not_found:
+  exit(1)
+
+# create working directory
 outdir = args.dir
 if not os.path.exists(outdir):
     os.makedirs(outdir)
-
-glossaryfile = args.glossary
 
 # train word embedding models on parallel data augmented
 # with monolingual data that contains glossary terms
@@ -340,6 +353,7 @@ else:
   alignmentfile = align_parallel_corpus(corpus_f, corpus_e)
 
 # main processing steps
+glossaryfile = args.glossary
 corpus_translation = get_possible_replacement_word_pairs(corpus_f, corpus_e, alignmentfile)
 replacement = get_replacement_pairs(glossaryfile, model_f, model_e, corpus_translation)
 generate_new_sentence_pairs(corpus_f, corpus_e, alignmentfile, outdir + "/synthetic-corpus", replacement)

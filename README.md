@@ -47,4 +47,3 @@ python ./synthesis.py --dir my-result-dir \
 
 BUG
 * full path required for mono corpus
-* check early if input files exist
