@@ -342,8 +342,8 @@ else:
     print("ERROR: You need to specify monolingual corpora (needed to train word embeddings) with --monolingual-corpus, or alternatively pretrained word embedding files with --embedding")
     exit(1)
   mono_corpus_f, mono_corpus_e = args.monolingual_corpus
-  model_f = train(mono_corpus_f, outdir + "/embedding.f")
-  model_e = train(mono_corpus_e, outdir + "/embedding.e")
+  model_f = train( os.path.abspath(mono_corpus_f), outdir + "/embedding.f" )
+  model_e = train( os.path.abspath(mono_corpus_e), outdir + "/embedding.e" )
   
 # compute word alignment for parallel corpus (using fast align)
 corpus_f, corpus_e = args.parallel_corpus

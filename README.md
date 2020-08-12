@@ -73,6 +73,3 @@ python ./synthesis.py --dir my-result-dir \
                       synthesis-data/parallel.en \
     --glossary synthesis-data/terminology >& log
 ```
-
-## KNOWN BUGS
-* full path required for mono corpus
