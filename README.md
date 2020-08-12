@@ -17,6 +17,25 @@ The following resources are required:
 
 Glossary terms have to be contained in the monolingual corpora at least 10 times -- the more the better for assessing their similarity to words in the parallel corpus.
 
+## EXAMPLE
+Assume that you glossary has the following translation:
+* Kranken 
+* sick
+
+The similarity model based on word embeddings may find the following similar translation pair in the corpus:
+* Armen
+* poor
+Note that both ''Kranken'' and ''Armen'', as well as ''sick'' and ''poor'' have to be similar.
+
+The existing parallel corpus may contain this word translation pair in the following sentence pair:
+* die Armen sich nicht abgesichert .
+* the poor go unprotected .
+Note that the tool assumes that all data is tokenized - it does not perform any additional pre-processing.
+
+Based on all this information, the following synthetic sentence pair is generated:
+* die Kranken sich nicht abgesichert .
+* the sick go unprotected .
+
 ## INSTALLATION
 
 You will need fast_align and Moses.
