@@ -56,13 +56,12 @@ def get_possible_replacement_word_pairs(corpusfile_f, corpusfile_e, alignmentfil
   count_e = Counter()
   count_f = Counter()
   translation = {}
-  while(True):
+  for line_a in fh_a:
     # read a sentence pair with word alignment
-    line_a = fh_a.readline().strip()
-    if len(line_a) == 0:
-      break
     word_f = fh_f.readline().strip().split(" ")
     word_e = fh_e.readline().strip().split(" ")
+    if len(line_a.strip()) == 0:
+      continue
 
     # increase word counts
     for e in word_e:
@@ -73,13 +72,13 @@ def get_possible_replacement_word_pairs(corpusfile_f, corpusfile_e, alignmentfil
     # how often is each word aligned?
     aligned_e = Counter()
     aligned_f = Counter()
-    for alignment_point in line_a.split(" "):
+    for alignment_point in line_a.strip().split(" "):
       fi, ei = [ int(x) for x in alignment_point.split("-") ]
       aligned_e[ ei ] += 1
       aligned_f[ fi ] += 1
  
     # record translations for 1-1 alignments
-    for alignment_point in line_a.split(" "):
+    for alignment_point in line_a.strip().split(" "):
       fi, ei = [ int(x) for x in alignment_point.split("-") ]
       if aligned_e[ ei ] > 1 or aligned_f[ fi ] > 1:
         continue
@@ -107,7 +106,7 @@ def get_possible_replacement_word_pairs(corpusfile_f, corpusfile_e, alignmentfil
   print(reliable_translation)
   return reliable_translation
 
-def get_similar_pairs(e, f, max_similar_words_considered, corpus_translation):
+def get_similar_pairs(f, e, max_similar_words_considered, corpus_translation):
   # get list of similar words to e and f
   #f_list = model_f.most_similar(positive=[f], topn=max_similar_words_considered, case_insensitive=False)
   #e_list = model_e.most_similar(positive=[e], topn=max_similar_words_considered, case_insensitive=False)
@@ -122,6 +121,7 @@ def get_similar_pairs(e, f, max_similar_words_considered, corpus_translation):
   similar = []
   total_count = 0
   # loop through all words similar to f
+  #print("looking for words similar to f word", f)
   for item in f_list:
     f_similar = item[0]
     f_similar_score = item[1]
@@ -130,7 +130,7 @@ def get_similar_pairs(e, f, max_similar_words_considered, corpus_translation):
     if f_similar in corpus_translation:
       if match_type is not "ok":
         match_type = 'no translation in e lex'
-      #print(e,f,corpus_translation[ f_similar ],
+      #print(e,f,corpus_translation[ f_similar ])
       #print('\ttranslation for',f_similar)
       for f_similar_translation in corpus_translation[ f_similar ]:
         f_similar_translation_word = f_similar_translation[0]
@@ -173,6 +173,8 @@ def load_possible_replacement_word_pairs( lexfile ):
     f = word[0]
     e = word[1]
     count = word[4]
+    if count > MAX_SIMILAR_WORD_FREQUENCY:
+      continue
     if f not in corpus_translation:
       corpus_translation[f] = []
     corpus_translation[f].append([e,count])
@@ -197,7 +199,7 @@ def get_replacement_pairs(glossaryfile, model_f, model_e, corpus_translation):
     # cast an increasingly wider net over similar words
     max_similar_words_considered = int(MAX_SIMILAR_WORDS_CONSIDERED / (2**6))
     while True:
-      comment, count, similar = get_similar_pairs(e, f, max_similar_words_considered, corpus_translation)
+      comment, count, similar = get_similar_pairs(f, e, max_similar_words_considered, corpus_translation)
       if count >= MAX_SENTENCE_PAIRS or max_similar_words_considered == MAX_SIMILAR_WORDS_CONSIDERED:
         print(f, e, '\t', comment, '\t', max_similar_words_considered, '\t', count, '\t', similar)
         similar_list.append( [f, e, similar] )
@@ -227,7 +229,7 @@ def get_replacement_pairs(glossaryfile, model_f, model_e, corpus_translation):
   return replacement
 
 # generate new sentence pairs
-def generate_new_sentence_pairs(corpus_f, corpus_e, alignmentfile, outfile, replacement):
+def generate_new_sentence_pairs_combinatorial(corpus_f, corpus_e, alignmentfile, outfile, replacement):
   fh_f = codecs.open(corpus_f, "r", encoding='utf-8')
   fh_e = codecs.open(corpus_e, "r", encoding='utf-8')
   fh_a = codecs.open(alignmentfile, "r", encoding='utf-8')
@@ -241,6 +243,8 @@ def generate_new_sentence_pairs(corpus_f, corpus_e, alignmentfile, outfile, repl
     # loop through aligned words
     slot = []
     for item in fh_a.readline().strip().split(' '):
+      if item is "":
+        continue
       fi, ei = item.split('-')
       f_word = f[int(fi)]
       e_word = e[int(ei)]
@@ -253,7 +257,7 @@ def generate_new_sentence_pairs(corpus_f, corpus_e, alignmentfile, outfile, repl
 
     # if replacement slots found, loop through replacements
     if len(slot)>0:
-      #print(sentence_f, sentence_e, slot)
+      print(sentence_f, sentence_e, slot)
       slot_index = [0] * len(slot)
       max = 1
       for item in slot:
@@ -261,7 +265,7 @@ def generate_new_sentence_pairs(corpus_f, corpus_e, alignmentfile, outfile, repl
       for ignore in range(min(max, 100)):
       
         # carry out replacement
-        #print("===", slot_index, slot)
+        #print("===", slot_index, slot, ignore, max)
         f_new = f.copy()
         e_new = e.copy()
         item_list = []
@@ -286,9 +290,45 @@ def generate_new_sentence_pairs(corpus_f, corpus_e, alignmentfile, outfile, repl
         while i>=0:
           slot_index[i] = slot_index[i] + 1
           if slot_index[i] < len(slot[i]["replacement"]):
-            continue
+            break
           slot_index[i] = 0
           i = i-1
+  fh_f.close()
+  fh_e.close()
+  fh_a.close()
+
+# generate new sentence pairs
+def generate_new_sentence_pairs(corpus_f, corpus_e, alignmentfile, outfile, replacement):
+  fh_f = codecs.open(corpus_f, "r", encoding='utf-8')
+  fh_e = codecs.open(corpus_e, "r", encoding='utf-8')
+  fh_a = codecs.open(alignmentfile, "r", encoding='utf-8')
+  fh_out = codecs.open(outfile, "w", encoding='utf-8')
+  for sentence_f in fh_f:
+    sentence_f = sentence_f.strip()
+    sentence_e = fh_e.readline().strip()
+    f = sentence_f.split(' ')
+    e = sentence_e.split(' ')
+
+    # loop through aligned words
+    slot = []
+    for item in fh_a.readline().strip().split(' '):
+      if item is "":
+        continue
+      fi, ei = item.split('-')
+      f_word = f[int(fi)]
+      e_word = e[int(ei)]
+      # is this corpus word pair replaceable with a glossary pair?
+      if f_word in replacement and e_word in replacement[f_word]:
+        # loop through all glossary pairs
+        for r in replacement[f_word][e_word]:
+          f_new = f.copy()
+          e_new = e.copy()
+          f_new_word = r['f']
+          e_new_word = r['e']
+          f_new[ int(fi) ] = f_new_word
+          e_new[ int(ei) ] = e_new_word
+          fh_out.write("\t".join([f_new_word,e_new_word,str(r['similarity']), sentence_f, sentence_e, " ".join(f_new), " ".join(e_new)]) + "\n")
+
   fh_f.close()
   fh_e.close()
   fh_a.close()
@@ -306,10 +346,13 @@ parser.add_argument("--parallel-corpus", nargs=2, required=True,
                     help="parallel corpus, source and target file")
 parser.add_argument("--alignment",
                     help="word alignments for parallel corpus, if they pre-computed")
+parser.add_argument("--non-combinatorial", action="store_true",
+                    help="do not expand word replacements combinatorial")
 args = parser.parse_args()
 
 MAX_SIMILAR_WORDS_CONSIDERED = 10240
 MAX_SENTENCE_PAIRS = 200
+MAX_SIMILAR_WORD_FREQUENCY = 100
 
 # check if files exist
 file_not_found = False
@@ -356,4 +399,7 @@ else:
 glossaryfile = args.glossary
 corpus_translation = get_possible_replacement_word_pairs(corpus_f, corpus_e, alignmentfile)
 replacement = get_replacement_pairs(glossaryfile, model_f, model_e, corpus_translation)
-generate_new_sentence_pairs(corpus_f, corpus_e, alignmentfile, outdir + "/synthetic-corpus", replacement)
+if args.non_combinatorial:
+  generate_new_sentence_pairs(corpus_f, corpus_e, alignmentfile, outdir + "/synthetic-corpus", replacement)
+else:
+  generate_new_sentence_pairs_combinatorial(corpus_f, corpus_e, alignmentfile, outdir + "/synthetic-corpus", replacement)
