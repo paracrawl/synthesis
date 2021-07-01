@@ -13,7 +13,7 @@ fast-align to identify the translations of words in the existing parallel corpus
 The following resources are required:
 * A file with glossary terms and their translations (currently only single words allowed)
 * A parallel corpus
-* Monolingual corpora for source and target langauge that contain the glossary terms and their translations, respectively
+* Monolingual corpora for source and target language that contain the glossary terms and their translations, respectively
 
 Glossary terms have to be contained in the monolingual corpora at least 10 times -- the more the better for assessing their similarity to words in the parallel corpus.
 
